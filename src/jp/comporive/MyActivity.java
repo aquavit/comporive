@@ -20,10 +20,18 @@ public class MyActivity extends Activity {
         SensorThread sensor = new SensorThread(sensorManager);
         SoundThread sound = new SoundThread();
 
+        //コンテキストを取得する
+        getContext();
+        
         sensor.start();
         sound.start();
 
         setContentView(R.layout.main);
+    }
+    
+    /**コンテキストを取得する*/
+    private void getContext(){
+    	AppliData.context = this;
     }
 }
 
