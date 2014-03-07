@@ -11,6 +11,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Bundle;
 
 public class MyActivity extends Activity {
     /**
@@ -26,10 +27,18 @@ public class MyActivity extends Activity {
         SensorThread sensor = new SensorThread(sensorManager, queue);
         SoundThread sound = new SoundThread(queue);
 
+        //コンテキストを取得する
+        getContext();
+        
         sensor.start();
         sound.start();
 
         setContentView(R.layout.main);
+    }
+    
+    /**コンテキストを取得する*/
+    private void getContext(){
+    	AppliData.context = this;
     }
 }
 
