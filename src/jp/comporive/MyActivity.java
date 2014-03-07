@@ -14,7 +14,10 @@ public class MyActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        SensorThread sensor = new SensorThread();
+
+        SensorManager sensorManager = (SensorManager)getSystemService( SENSOR_SERVICE  );
+
+        SensorThread sensor = new SensorThread(sensorManager);
         SoundThread sound = new SoundThread();
 
         sensor.start();
