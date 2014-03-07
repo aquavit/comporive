@@ -21,9 +21,7 @@ public class MyActivity extends Activity {
 }
 
 class SensorThread extends Thread{
-
-}
-
-class SoundThread extends Thread{
-
+	@Override
+	public void run() {
+	}
 }
