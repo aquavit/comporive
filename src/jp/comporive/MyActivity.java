@@ -1,11 +1,11 @@
 package jp.comporive;
 
 import android.app.Activity;
-import android.os.Bundle;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Bundle;
 
 public class MyActivity extends Activity {
     /**
