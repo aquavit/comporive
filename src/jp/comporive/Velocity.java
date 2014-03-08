@@ -6,9 +6,11 @@ package jp.comporive;
 public class Velocity {
 	public final double x, y, z;
 	public final double t;	// 時刻 (秒単位), アプリ開始時 = 0.0
+	public final double dt; // 直前のイベントとの時間差分 (秒単位)
 	
-	public Velocity(double t, double x, double y, double z) {
+	public Velocity(double t, double dt, double x, double y, double z) {
 		this.t = t;
+		this.dt = dt;
 		this.x = x;
 		this.y = y;
 		this.z = z;

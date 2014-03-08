@@ -11,6 +11,7 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.media.SoundPool;
+import android.util.Log;
 
 /**ドラマー*/
 public class Drummer {
@@ -53,7 +54,6 @@ public class Drummer {
 		
 		@Override
 		public void run() {
-			// TODO Auto-generated method stub
 			//long progress = System.currentTimeMillis();
 			
 	//		sound.play(drum.id, 1.0F, 1.0F, 1, 0, 1.f);
@@ -61,22 +61,22 @@ public class Drummer {
 			//
 			//progress = System.currentTimeMillis() - progress;
 			
-			try {
+//			try {
 				//待機時間-経過時間
 				//long wait = waitTime - progress;
 				
 				//待機時間があったら、待機
 				//if (wait > 0){
-					Thread.sleep(waitTime);
+//					Thread.sleep(waitTime);
 		//		}
 				
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+//			} catch (InterruptedException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
 			
 			//スネア読み込み
-			snear.at.write(snear.s, 0, snear.s.length);
+//			snear.at.write(snear.s, 0, snear.s.length);
 			
 			
 //			sound.play(snear.id, 1.0F, 1.0F, 1, 0, 1.f);
@@ -111,7 +111,7 @@ public class Drummer {
 		long rate = (long) (1000.0*(60.0 / nowBpm));
 		drum.at.play(); 
 		snear.at.play();
-		timer.schedule(new DrumTask(rate), 0, rate);
+		timer.scheduleAtFixedRate(new DrumTask(rate), 0, rate);
         
 	//	drum.timer.schedule(new DrumTask(), 0, 500);
 	//	snear.timer.schedule(new SnearTask(), 0, 250);
@@ -209,9 +209,12 @@ public class Drummer {
 		
 		//終了処理
 		timer.cancel();
-	
+		timer.purge();
+		timer = new Timer();
 		//Bpm
 		long rate = (long) (1000.0*(60.0 / bpm));
+		
+		Log.d("comporive", "bpm = " + bpm + ", rate = " + rate);
 		timer.schedule(new DrumTask(rate), 0, rate);
 	}
 		
