@@ -4,8 +4,16 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import java.util.concurrent.BlockingQueue;
+
 
 class SoundThread extends Thread{
+	private final BlockingQueue<Velocity> queue;
+	
+	public SoundThread(BlockingQueue<Velocity> queue) {
+		this.queue = queue;
+	}
+	
 	public boolean shutdown = false;
 	Drummer drum = new Drummer();
 	
@@ -18,6 +26,7 @@ class SoundThread extends Thread{
 		drum.initialize();
 				
 		//test.start();
+		/*
 		double bpm = 30.0;
 		while (!shutdown){
 			//ƒhƒ‰ƒ€ˆ—
@@ -25,6 +34,7 @@ class SoundThread extends Thread{
 			drum.setBpm(bpm);
 			
 		}
+		*/
 		
 		//ƒhƒ‰ƒ€‚ÌI—¹ˆ—
 		//drum.shutdown();

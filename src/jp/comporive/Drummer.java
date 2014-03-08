@@ -1,9 +1,15 @@
 package jp.comporive;
 
+import java.io.DataInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import android.media.AudioFormat;
 import android.media.AudioManager;
+import android.media.AudioTrack;
 import android.media.SoundPool;
 
 /**ドラマー*/
@@ -20,13 +26,15 @@ public class Drummer {
 	
 	//楽器のデータ
 	class SoundData{
+		byte[] s = null;
 		Timer timer = null;
 		int bufSize = 10;	//音楽の同時利用数
-		int id = 0;	//ID
+		AudioTrack at;
+	//	int id = 0;	//ID
 		long waitTime = 0;	//待機時間
 		long targetTime = 0;	//時間算出
 		long sub = 0;
-		boolean play = false;
+		//boolean play = false;
 	}
 	
 	Timer timer = new Timer();
@@ -40,6 +48,7 @@ public class Drummer {
 		public DrumTask(long rate){
 			
 			this.waitTime = (long)((double)rate * 0.5);
+			
 		}
 		
 		@Override
@@ -47,8 +56,8 @@ public class Drummer {
 			// TODO Auto-generated method stub
 			//long progress = System.currentTimeMillis();
 			
-			sound.play(drum.id, 1.0F, 1.0F, 1, 0, 1.f);
-			
+	//		sound.play(drum.id, 1.0F, 1.0F, 1, 0, 1.f);
+			drum.at.write(drum.s, 0, drum.s.length);
 			//
 			//progress = System.currentTimeMillis() - progress;
 			
@@ -67,7 +76,7 @@ public class Drummer {
 			}
 			
 			
-			sound.play(snear.id, 1.0F, 1.0F, 1, 0, 1.f);
+//			sound.play(snear.id, 1.0F, 1.0F, 1, 0, 1.f);
 		}
 	}
 	
@@ -75,23 +84,33 @@ public class Drummer {
 		@Override
 		public void run() {
 			// TODO Auto-generated method stub
-			sound.play(snear.id, 1.0F, 1.0F, 1, 0, 1.f);
+	//		sound.play(snear.id, 1.0F, 1.0F, 1, 0, 1.f);
 		}
 	}
 	
+	int minBufferSize = 0;
+	
+	
+	public Drummer(){		
+		
+	}
 	/**初期化*/
 	public void initialize(){
 		
-		sound = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
+		//sound = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
+		
+		minBufferSize = AudioTrack.getMinBufferSize(44100, AudioFormat.CHANNEL_IN_STEREO, AudioFormat.ENCODING_PCM_16BIT);
+		
 		initDrum();
 		initSnear();
 		
 		samMill = 0;
-		
-		
 		long rate = (long) (1000.0*(60.0 / nowBpm));
-		
+		drum.at.play(); 
 		timer.schedule(new DrumTask(rate), 0, rate);
+		
+       
+        
 	//	drum.timer.schedule(new DrumTask(), 0, 500);
 	//	snear.timer.schedule(new SnearTask(), 0, 250);
 		
@@ -168,13 +187,13 @@ public class Drummer {
 		snear.targetTime += drum.waitTime;
 		
 		//音を鳴らす
-		sound.play(snear.id, 1.0F, 1.0F, 1, 0, 1.f);
+	//	sound.play(snear.id, 1.0F, 1.0F, 1, 0, 1.f);
 	}
 	
 	/**bpmを渡す*/
 	public void setBpm(double bpm){
 		final double offset = 5.0;	//オフセット値
-	
+		
 		//bpmが0以下の場合は、再生しない
 		if (bpm <= 0.0){
 			timer.cancel();
@@ -212,12 +231,37 @@ public class Drummer {
 		}*/
 	}
 	
+	/**サウンドデータの読み込み*/
+	private void readSoundData(int soundId, SoundData soundData){
+		
+		//オーディオトラックの作成
+		soundData.at = new AudioTrack(AudioManager.STREAM_MUSIC, 44100, AudioFormat.CHANNEL_IN_STEREO, AudioFormat.ENCODING_PCM_16BIT, minBufferSize, AudioTrack.MODE_STREAM);
+	
+		//ドラムデータを呼び出す
+        try {
+        	InputStream in = AppliData.context.getResources().openRawResource(soundId);
+            DataInputStream dis = new DataInputStream(in);
+			soundData.s = new byte[in.available()];
+			dis.readFully(soundData.s);	
+			in.close();
+			dis.close();
+		} catch (FileNotFoundException e) {
+            // TODO
+            e.printStackTrace();
+        }
+         catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 	
+	}
 	
 	/**ドラム初期化*/
 	private void initDrum(){
 		drum.timer = new Timer();
-		drum.id = sound.load(AppliData.context, R.raw.a0, 1);
 		
+		//サウンドデータの読み込み
+		readSoundData(R.raw.a0, drum);
+
 		//60BPM は 1000ミリ(1秒)に一回なので、割合を算出する
 		double rate = 60.0 / nowBpm;
 		rate = SEC * rate;
@@ -226,16 +270,18 @@ public class Drummer {
 		drum.targetTime = (long)rate;
 
 		//音を鳴らす
-		
-
 		//sound.setRate(drum.id, 1.f);		
 	}
 	
 	/**スネア初期化*/
 	private void initSnear(){
 		snear.timer = new Timer();
+
+		//サウンドデータの読み込み
+		readSoundData(R.raw.a4, drum);
+
 		//sound = new SoundPool(5, AudioManager.STREAM_MUSIC, 0);
-		snear.id = sound.load(AppliData.context, R.raw.a4, 1);
+		//snear.id = sound.load(AppliData.context, R.raw.a4, 1);
 		
 		double rate = 60.0 / nowBpm;
 		rate = (SEC * rate)*1.5;
