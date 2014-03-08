@@ -26,7 +26,7 @@ import android.os.Bundle;
 
 public class MyActivity extends Activity {
 	// INTERVAL •b‚É1“xABPM‚ğ•ÏX‚·‚é
-	public static final double INTERVAL = 3.0;	// ‚Æ‚è‚ ‚¦‚¸3•b
+	public static final double INTERVAL = 1.5;	// ‚Æ‚è‚ ‚¦‚¸3•b
 	
 	private SensorManager sensorManager;
 	private SensorHandler sensorHandler;

@@ -238,8 +238,9 @@ public class Drummer {
 				
 				double tick = 0.0;
 				while (tick < interval) {
+					int rem = (int)(interval - tick)*44100*2*2;
 					snd.at.write(snd.s, 0, snd.s.length);
-					snd.at.write(blank, 0, blank.length);
+					snd.at.write(blank, 0, Math.min(blank.length, rem));
 					tick += period;
 				}
 			}
@@ -312,7 +313,7 @@ public class Drummer {
 		snear.timer = new Timer();
 
 		//サウンドデータの読み込み
-		readSoundData(R.raw.a0, snear);
+		readSoundData(R.raw.a4, snear);
 
 		//sound = new SoundPool(5, AudioManager.STREAM_MUSIC, 0);
 		//snear.id = sound.load(AppliData.context, R.raw.a4, 1);
