@@ -25,6 +25,9 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 
 public class MyActivity extends Activity {
+	// INTERVAL 秒に1度、BPMを変更する
+	public static final double INTERVAL = 3.0;	// とりあえず3秒
+	
     /**
      * Called when the activity is first created.
      */
@@ -110,6 +113,7 @@ class SensorThread extends Thread implements SensorEventListener{
     	// Sensor.TYPE_LINEAR_ACCELERATION -> 重力を除いた補正値が出る (Androidバージョンによって使えなかったり値がいいかげんらしい?)
         sensor = sensorManager.getDefaultSensor( Sensor.TYPE_LINEAR_ACCELERATION /*Sensor.TYPE_ACCELEROMETER*/ );
         sensorManager.registerListener(this, sensor, RATE /*SensorManager.SENSOR_DELAY_UI*/);
+        
     }
 
     public void onAccuracyChanged (Sensor sensor, int accuracy) {
@@ -119,8 +123,11 @@ class SensorThread extends Thread implements SensorEventListener{
     private long prevTimestamp = 0L;
     final double NANOSEC_SCALE = 1000 * 1000 * 1000;
     private long count = 0L;
-    
+
+	private double elapsed = 0.0;	// 直前にBPMを変更してからの経過時間 (秒)
+
     private float initialValues[];
+    
     public void onSensorChanged(SensorEvent sensorEvent) {
     	long deltaT = sensorEvent.timestamp - prevTimestamp;
     	prevTimestamp = sensorEvent.timestamp;
@@ -142,11 +149,23 @@ class SensorThread extends Thread implements SensorEventListener{
     	
     	try {
 			queue.put(velocity.current());
+			
+			elapsed += velocity.current().dt;
+			if (elapsed >= MyActivity.INTERVAL) {;
+				// 速度の積算機をリセットする
+				// ※ このスレッドで独立に elapsed time を加算・判定する方法だと、
+				// SoundThread 側と完全な同期が保証されないが、今回は目をつぶる
+				velocity = new VelocityAccumlator(0.0, 0.0, 0.0);
+				// clear the stats for the next interval
+				elapsed = 0.0;
+			}
+			
 //			Log.d("comporive", velocity.current().toString());
 		} catch (InterruptedException e) {
 //			// TODO Auto-generated catch block
 //			e.printStackTrace();
 		}
+    	
 //    	Log.d("comporive", 
 //    		sensorEvent.timestamp + " (delta = " + deltaTinSec + " sec.): " + 
 //    		Arrays.toString(values) + 

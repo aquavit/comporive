@@ -27,20 +27,17 @@ class SoundThread extends Thread{
 		//ƒhƒ‰ƒ€‚Ì‰Šú‰»
 		drum.initialize();
 		
-		// INTERVAL •b‚É1“xABPM‚ð•ÏX‚·‚é
-		final double INTERVAL = 3.0;	// ‚Æ‚è‚ ‚¦‚¸3•b
-		
 		double elapsed = 0.0;	// ’¼‘O‚ÉBPM‚ð•ÏX‚µ‚Ä‚©‚ç‚ÌŒo‰ßŽžŠÔ (•b)
 		double vsum = 0.0; 	// ’¼‹ß INTERVAL •b“à‚Ì‘¬“x’l‚Ì˜a
 		
-		BPMCalculator bpmOf = new BoundedLinearBPM(3.0, 300);
+		BPMCalculator bpmOf = new BoundedLinearBPM(8.0, 300);
 		while (true) {
 			try {
 				Velocity v = queue.take();
 				elapsed += v.dt;
 				vsum += v.magnitude();
-				Log.d("comporive" , vsum + ", " + v.magnitude());
-				if (elapsed >= INTERVAL) {;
+//				Log.d("comporive" , vsum + ", " + v.magnitude());
+				if (elapsed >= MyActivity.INTERVAL) {;
 					double bpm = bpmOf.call(vsum / elapsed);
 					// change BPM
 					drum.setBpm(bpm);
