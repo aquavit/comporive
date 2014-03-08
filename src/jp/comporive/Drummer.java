@@ -19,7 +19,7 @@ public class Drummer {
 	static double baseBpm = 60.0;	//ベースフレーム
 	
 	//BPMの算出用
-	double nowBpm = 180.0;	//現在のbpm
+	double nowBpm = 60.0;	//現在のbpm
 	double targetBpm = 0.0;	//ターゲットとなるbpm
 
 	SoundPool sound = null;
@@ -75,6 +75,9 @@ public class Drummer {
 				e.printStackTrace();
 			}
 			
+			//スネア読み込み
+			snear.at.write(snear.s, 0, snear.s.length);
+			
 			
 //			sound.play(snear.id, 1.0F, 1.0F, 1, 0, 1.f);
 		}
@@ -107,9 +110,8 @@ public class Drummer {
 		samMill = 0;
 		long rate = (long) (1000.0*(60.0 / nowBpm));
 		drum.at.play(); 
+		snear.at.play();
 		timer.schedule(new DrumTask(rate), 0, rate);
-		
-       
         
 	//	drum.timer.schedule(new DrumTask(), 0, 500);
 	//	snear.timer.schedule(new SnearTask(), 0, 250);
@@ -278,7 +280,7 @@ public class Drummer {
 		snear.timer = new Timer();
 
 		//サウンドデータの読み込み
-		readSoundData(R.raw.a4, drum);
+		readSoundData(R.raw.a0, snear);
 
 		//sound = new SoundPool(5, AudioManager.STREAM_MUSIC, 0);
 		//snear.id = sound.load(AppliData.context, R.raw.a4, 1);
