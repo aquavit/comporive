@@ -42,9 +42,9 @@ public class MyActivity extends Activity {
         getContext();
         
 //        sensor.start();
-//        sound.start();
+        sound.start();
 
-        testPlay();
+       // testPlay();
         setContentView(R.layout.main);
     }
     
@@ -102,6 +102,7 @@ class SensorThread extends Thread implements SensorEventListener{
         this.sensorManager = sensorManager;
         this.queue = queue;
     }
+    
     @Override
     public void run(){
     	final int RATE = 16670;	// 16.67 msec in micro seconds
