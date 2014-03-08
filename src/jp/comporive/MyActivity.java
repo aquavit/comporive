@@ -161,6 +161,8 @@ class SensorThread extends Thread implements SensorEventListener{
 			}
 			
 //			Log.d("comporive", velocity.current().toString());
+
+			
 		} catch (InterruptedException e) {
 //			// TODO Auto-generated catch block
 //			e.printStackTrace();
