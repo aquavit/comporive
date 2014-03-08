@@ -41,7 +41,7 @@ public class MyActivity extends Activity {
         //コンテキストを取得する
         getContext();
         
-//        sensor.start();
+        sensor.start();
         sound.start();
 
        // testPlay();
