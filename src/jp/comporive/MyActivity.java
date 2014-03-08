@@ -43,6 +43,7 @@ class SensorThread extends Thread implements SensorEventListener{
     public SensorThread(SensorManager sensorManager){
         this.sensorManager = sensorManager;
     }
+    
     @Override
     public void run(){
         sensor = sensorManager.getDefaultSensor( Sensor.TYPE_ACCELEROMETER );

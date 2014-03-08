@@ -1,50 +1,101 @@
 package jp.comporive;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import android.media.AudioManager;
 import android.media.SoundPool;
-import android.util.Log;
 
 /**ドラマー*/
 public class Drummer {
 
+	private static double SEC = 1000000000.0;
 	static double baseBpm = 60.0;	//ベースフレーム
-	static double rateFrame = 1000.0 / 60.0;	//rateFrame
 	
 	//BPMの算出用
-	double nowBpm = 0.0;	//現在のbpm
+	double nowBpm = 180.0;	//現在のbpm
 	double targetBpm = 0.0;	//ターゲットとなるbpm
+
+	SoundPool sound = null;
 	
-	//private static int BUF_SIZE = 30;
+	//楽器のデータ
+	class SoundData{
+		Timer timer = null;
+		int bufSize = 10;	//音楽の同時利用数
+		int id = 0;	//ID
+		long waitTime = 0;	//待機時間
+		long targetTime = 0;	//時間算出
+		long sub = 0;
+		boolean play = false;
+	}
 	
-	//ドラムデータ
-	private SoundPool sound = null;
-	private int dMax = 10;	//同時利用数
-	private int id;	//ID
-	private long wait = 0;	//ドラムを鳴らすポイント
-	private long target = 0;	
-	//private long list[] = new long[BUF_SIZE];
-	//private int focus = 0;
+	Timer timer = new Timer();
+	SoundData drum = new SoundData();//ドラムデータ
+	SoundData snear = new SoundData();	//スネアデータ
+
 	
+	class DrumTask extends TimerTask{
+		
+		long waitTime = 0;
+		public DrumTask(long rate){
+			
+			this.waitTime = (long)((double)rate * 0.5);
+		}
+		
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+			//long progress = System.currentTimeMillis();
+			
+			sound.play(drum.id, 1.0F, 1.0F, 1, 0, 1.f);
+			
+			//
+			//progress = System.currentTimeMillis() - progress;
+			
+			try {
+				//待機時間-経過時間
+				//long wait = waitTime - progress;
+				
+				//待機時間があったら、待機
+				//if (wait > 0){
+					Thread.sleep(waitTime);
+		//		}
+				
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			
+			sound.play(snear.id, 1.0F, 1.0F, 1, 0, 1.f);
+		}
+	}
+	
+	class SnearTask extends TimerTask{
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+			sound.play(snear.id, 1.0F, 1.0F, 1, 0, 1.f);
+		}
+	}
 	
 	/**初期化*/
 	public void initialize(){
-		//音情報を保存する
-		sound = new SoundPool(dMax, AudioManager.STREAM_MUSIC, 0);
-		id = sound.load(AppliData.context, R.raw.a0, 1);
 		
-		//
-		long now = System.currentTimeMillis();
-		target =  1000;
+		sound = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
+		initDrum();
+		initSnear();
+		
 		samMill = 0;
 		
-		/*
-		//鳴らすタイミングを計算する
-		for (int i=0; i<BUF_SIZE; i++){
-			list[i] = now+1000 + (1000*i);
-		}
-		*/
-		//
-		//calcBpm();
+		
+		long rate = (long) (1000.0*(60.0 / nowBpm));
+		
+		timer.schedule(new DrumTask(rate), 0, rate);
+	//	drum.timer.schedule(new DrumTask(), 0, 500);
+	//	snear.timer.schedule(new SnearTask(), 0, 250);
+		
+		//sound.setLoop(drum.id, -1);
 	}
 	
 	/**終了処理*/
@@ -54,99 +105,169 @@ public class Drummer {
 	
 	/**処理*/
 	public void process(){
-		//calcBpm();
-		
-		//時間を算出する
-		//calcTime();
 		
 		//bpm数を計算する
 		playSound();
 	}
 	
-	int cnt = 0;
 
 	/**音を鳴らす*/
 	private void playSound(){
-		//BPMを算出する
-		calcBpm();
-		
-		//時間を算出する
-		calcTime();
-		
-		//bpmを鳴らす
-		playDrum();
-		
 		/*
-		if (++cnt >= 60){
-		
-			cnt = 0;
+		if (!drum.play){
+			//sound.setLoop(drum.id, -1);
+			sound.play(drum.id, 1.0F, 1.0F, 1, 0, 1.f);
+			drum.play = true;
 		}
 		*/
+		
+		
+		//BPMを算出する
+	//	calcBpm();
+		
+		//時間を算出する
+	//	calcTime();
+		
+		//bpmを鳴らす
+		//playDrum();
+	
+	//	playSnear();
 	}
 	
 	/**ドラムを鳴らす*/
 	private void playDrum(){
-		Log.e("Time", "target = "+target);
-		Log.e("Time", "sam = "+samMill);
+		if (drum == null) return;
+		//Log.e("Time", "target = "+target);
+		//Log.e("Time", "sam = "+samMill);
 		
 		//ターゲットまでの音が出ていない
-		if (target > samMill)
+		if (drum.targetTime > samMill)
 			return;
 
+	//	Log.e("Sound", "PLAY SOUND="+(target - samMill));
+		
 		//
-		target = samMill + wait;
+		/*
+		//samMill = drum.targetTime;
+		{
+			//long sub = drum.targetTime - samMill + drum.sub -100;
+			//drum.sub = (0>sub)? 0:sub;
+			drum.targetTime += drum.waitTime;
+		}
+		*/
+		
+	}
+	
+	private void playSnear(){
+		if (snear == null) return;
+		
+		//ターゲットまでの音が出ていない
+		if (snear.targetTime > samMill)
+			return;
+
+		snear.targetTime += drum.waitTime;
 		
 		//音を鳴らす
-		sound.play(id, 1.0F, 1.0F, 1, 0, 1.0F);
-
-		Log.e("Sound", "PLAY SOUND--------------------");
+		sound.play(snear.id, 1.0F, 1.0F, 1, 0, 1.f);
 	}
 	
 	/**bpmを渡す*/
 	public void setBpm(double bpm){
+		final double offset = 5.0;	//オフセット値
+	
+		//bpmが0以下の場合は、再生しない
+		if (bpm <= 0.0){
+			timer.cancel();
+			return;
+		}
+		
+		//一定値以上変化がない場合は返す
+		if (nowBpm+offset >= bpm && nowBpm-offset<=bpm){
+			return;
+		}
+		
+		//終了処理
+		timer.cancel();
+	
 		//Bpm
-		targetBpm = bpm;
+		long rate = (long) (1000.0*(60.0 / bpm));
+		timer.schedule(new DrumTask(rate), 0, rate);
 	}
-	
-	
+		
 	/**BPM算出*/
-	private void calcBpm(){
-		
+	public void calcBpm(){
+		return;
+		/*
 		//仮代入
-		nowBpm = 180.0;
-		
 		//ドラムを鳴らすミリ秒を計算する
 		if (nowBpm <= 0.0){
-			wait = 0;
+			drum.waitTime = 0;
 		}else{
 			//60BPM は 1000ミリ(1秒)に一回なので、割合を算出する
 			double rate = 60.0 / nowBpm;
-			wait = (long)(1000.0 * rate);
-		}
+			
+			
+	
+			drum.waitTime = (long)(SEC * rate);
+		}*/
+	}
+	
+	
+	/**ドラム初期化*/
+	private void initDrum(){
+		drum.timer = new Timer();
+		drum.id = sound.load(AppliData.context, R.raw.a0, 1);
+		
+		//60BPM は 1000ミリ(1秒)に一回なので、割合を算出する
+		double rate = 60.0 / nowBpm;
+		rate = SEC * rate;
+		
+		drum.waitTime = (long)rate;
+		drum.targetTime = (long)rate;
+
+		//音を鳴らす
+		
+
+		//sound.setRate(drum.id, 1.f);		
+	}
+	
+	/**スネア初期化*/
+	private void initSnear(){
+		snear.timer = new Timer();
+		//sound = new SoundPool(5, AudioManager.STREAM_MUSIC, 0);
+		snear.id = sound.load(AppliData.context, R.raw.a4, 1);
+		
+		double rate = 60.0 / nowBpm;
+		rate = (SEC * rate)*1.5;
+		
+		snear.waitTime = (long)rate;
+		snear.targetTime = (long)rate;
 	}
 	
 	/**時間計測*/
-	private void calcTime(){
+	public void calcTime(){
+		return;
+		/*
 		//初期時の処理
 		if (oldMill == -1){
-			oldMill = System.currentTimeMillis();
+			oldMill = getTime();
 			return;
 		}
 			
 		//現在の時間を取得する
-		long nowMill = System.currentTimeMillis();
+		//long nowMill = System.currentTimeMillis();
+		long nowMill = getTime();
 
-		//現在の時間 -　1フレーム前の時間　 
-		long sub = nowMill - oldMill;
-		
-		//プラスする
-		samMill += sub;
+		//現在の時間 -　1フレーム前の時間
+		samMill += nowMill - oldMill;
 		
 		//
 		oldMill = nowMill;
+		*/
 	}
+	
+	private long getTime(){return System.nanoTime();}
 
 	private long oldMill = -1; //昔のミリサイズ
-	private long samMill = 0;	//総ミリ
-
+	private long samMill = 0;	//総ミ
 }
