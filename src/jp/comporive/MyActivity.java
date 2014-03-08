@@ -26,7 +26,11 @@ import android.os.Bundle;
 
 public class MyActivity extends Activity {
 	// INTERVAL 秒に1度、BPMを変更する
-	public static final double INTERVAL = 3.0;	// とりあえず3秒
+	public static final double INTERVAL = 1.5;	// とりあえず3秒
+	
+	private SensorManager sensorManager;
+	private SensorHandler sensorHandler;
+	private Sensor sensor;
 	
     /**
      * Called when the activity is first created.
@@ -35,20 +39,38 @@ public class MyActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        SensorManager sensorManager = (SensorManager)getSystemService( SENSOR_SERVICE  );
-
+        sensorManager = (SensorManager)getSystemService( SENSOR_SERVICE  );
+        sensor = sensorManager.getDefaultSensor( Sensor.TYPE_LINEAR_ACCELERATION /*Sensor.TYPE_ACCELEROMETER*/ );
+        
         BlockingQueue<Velocity> queue = new ArrayBlockingQueue<Velocity>(70 * 60); // 70FPS を仮定して、1分間分 (とりあえず)
-        SensorThread sensor = new SensorThread(sensorManager, queue);
+        sensorHandler = new SensorHandler(queue);
         SoundThread sound = new SoundThread(queue);
 
         //コンテキストを取得する
         getContext();
         
-        sensor.start();
         sound.start();
 
        // testPlay();
         setContentView(R.layout.main);
+        onResume();
+    }
+    
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if(sensorManager!=null && sensorHandler!=null)
+        	sensorManager.unregisterListener(sensorHandler);
+    }
+    @Override
+    protected void onResume(){
+    	super.onResume();
+    	
+    	final int RATE = 16670;	// 16.67 msec in micro seconds
+    	// TYPE_ACCELEROMETER -> 出力に「重力」が含まれる (机に置きっぱなしでも 9.8 前後の値が出る)
+    	// Sensor.TYPE_LINEAR_ACCELERATION -> 重力を除いた補正値が出る (Androidバージョンによって使えなかったり値がいいかげんらしい?)
+    	if(sensorManager!=null && sensor!=null)
+    		sensorManager.registerListener(sensorHandler, sensor, RATE /*SensorManager.SENSOR_DELAY_UI*/);
     }
     
     private void testPlay() {
@@ -95,26 +117,22 @@ public class MyActivity extends Activity {
 }
 
 
-class SensorThread extends Thread implements SensorEventListener{
-    SensorManager sensorManager;
-    Sensor sensor;
-
+class SensorHandler implements SensorEventListener{
     private final BlockingQueue<Velocity> queue;
     private VelocityAccumlator velocity = new VelocityAccumlator(0.0, 0.0, 0.0); // 速度ベクトルの初期値は (0, 0, 0) を仮定
-    public SensorThread(SensorManager sensorManager, BlockingQueue<Velocity> queue){
-        this.sensorManager = sensorManager;
+    public SensorHandler(BlockingQueue<Velocity> queue){
         this.queue = queue;
     }
     
-    @Override
-    public void run(){
-    	final int RATE = 16670;	// 16.67 msec in micro seconds
+    //@Override
+    //public void run(){
+    //	final int RATE = 16670;	// 16.67 msec in micro seconds
     	// TYPE_ACCELEROMETER -> 出力に「重力」が含まれる (机に置きっぱなしでも 9.8 前後の値が出る)
     	// Sensor.TYPE_LINEAR_ACCELERATION -> 重力を除いた補正値が出る (Androidバージョンによって使えなかったり値がいいかげんらしい?)
-        sensor = sensorManager.getDefaultSensor( Sensor.TYPE_LINEAR_ACCELERATION /*Sensor.TYPE_ACCELEROMETER*/ );
-        sensorManager.registerListener(this, sensor, RATE /*SensorManager.SENSOR_DELAY_UI*/);
-        
-    }
+   //     sensor = sensorManager.getDefaultSensor( Sensor.TYPE_LINEAR_ACCELERATION /*Sensor.TYPE_ACCELEROMETER*/ );
+   //     sensorManager.registerListener(this, sensor, RATE /*SensorManager.SENSOR_DELAY_UI*/);
+   //     
+    //}
 
     public void onAccuracyChanged (Sensor sensor, int accuracy) {
 
@@ -161,6 +179,8 @@ class SensorThread extends Thread implements SensorEventListener{
 			}
 			
 //			Log.d("comporive", velocity.current().toString());
+
+			
 		} catch (InterruptedException e) {
 //			// TODO Auto-generated catch block
 //			e.printStackTrace();

@@ -17,10 +17,10 @@ import android.util.Log;
 public class Drummer {
 
 	private static double SEC = 1000000000.0;
-	static double baseBpm = 60.0;	//ベースフレーム
+	static double baseBpm = 30.0;	//ベースフレーム
 	
 	//BPMの算出用
-	double nowBpm = 60.0;	//現在のbpm
+	double nowBpm = baseBpm;	//現在のbpm
 	double targetBpm = 0.0;	//ターゲットとなるbpm
 
 	SoundPool sound = null;
@@ -45,10 +45,10 @@ public class Drummer {
 	
 	class DrumTask extends TimerTask{
 		
-		long waitTime = 0;
-		public DrumTask(long rate){
+//		long waitTime = 0;
+		public DrumTask(/*long rate*/){
 			
-			this.waitTime = (long)((double)rate * 0.5);
+//			this.waitTime = (long)((double)rate * 0.5);
 			
 		}
 		
@@ -86,8 +86,7 @@ public class Drummer {
 	class SnearTask extends TimerTask{
 		@Override
 		public void run() {
-			// TODO Auto-generated method stub
-	//		sound.play(snear.id, 1.0F, 1.0F, 1, 0, 1.f);
+			snear.at.write(snear.s, 0, snear.s.length);
 		}
 	}
 	
@@ -108,10 +107,11 @@ public class Drummer {
 		initSnear();
 		
 		samMill = 0;
-		long rate = (long) (1000.0*(60.0 / nowBpm));
+//		long rate = (long) (1000.0*(60.0 / nowBpm));
 		drum.at.play(); 
 		snear.at.play();
-		timer.scheduleAtFixedRate(new DrumTask(rate), 0, rate);
+//		timer.scheduleAtFixedRate(new DrumTask(), 0, rate);
+//		timer.scheduleAtFixedRate(new SnearTask(), 0, (long)(rate*1.5));
         
 	//	drum.timer.schedule(new DrumTask(), 0, 500);
 	//	snear.timer.schedule(new SnearTask(), 0, 250);
@@ -215,7 +215,37 @@ public class Drummer {
 		long rate = (long) (1000.0*(60.0 / bpm));
 		
 		Log.d("comporive", "bpm = " + bpm + ", rate = " + rate);
-		timer.schedule(new DrumTask(rate), 0, rate);
+		
+		playAt(drum, bpm, MyActivity.INTERVAL);
+//		playAt(snear, bpm*1.5, MyActivity.INTERVAL);
+//		for (int i=0; i<10; i++) {
+//			byte[] blank = new byte[44100 * 2 * 2];
+//			drum.at.write(blank, 0, blank.length);
+//			drum.at.write(drum.s, 0, drum.s.length);
+//		}
+//		timer.scheduleAtFixedRate(new DrumTask(), 0, rate);
+//		timer.scheduleAtFixedRate(new SnearTask(), 0, (long)(rate * 1.5));
+	}
+	void playAt(final SoundData snd, final double bpm, final double interval) {
+		Thread t = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				double period = 60.0 / bpm;
+				double soundPeriod = ((double)snd.s.length) / (44100 * 2 * 2);
+				double blankPeriod = Math.max(0, period - soundPeriod);
+				byte[] blank = new byte[(int)(blankPeriod * 44100 * 2 * 2)];
+				
+				double tick = 0.0;
+				while (tick < interval) {
+					int rem = (int)(interval - tick)*44100*2*2;
+					snd.at.write(snd.s, 0, snd.s.length);
+					snd.at.write(blank, 0, Math.min(blank.length, rem));
+					tick += period;
+				}
+			}
+		});
+		t.run();
 	}
 		
 	/**BPM算出*/
@@ -283,7 +313,7 @@ public class Drummer {
 		snear.timer = new Timer();
 
 		//サウンドデータの読み込み
-		readSoundData(R.raw.a0, snear);
+		readSoundData(R.raw.a4, snear);
 
 		//sound = new SoundPool(5, AudioManager.STREAM_MUSIC, 0);
 		//snear.id = sound.load(AppliData.context, R.raw.a4, 1);
