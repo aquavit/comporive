@@ -1,11 +1,22 @@
 package jp.comporive;
 
+import java.io.DataInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 import android.app.Activity;
+import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioTrack;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -30,13 +41,51 @@ public class MyActivity extends Activity {
         //コンテキストを取得する
         getContext();
         
-        sensor.start();
-        sound.start();
+//        sensor.start();
+//        sound.start();
 
+        testPlay();
         setContentView(R.layout.main);
     }
     
-    /**コンテキストを取得する*/
+    private void testPlay() {
+        int minBufferSize = AudioTrack.getMinBufferSize(44100, AudioFormat.CHANNEL_IN_STEREO, AudioFormat.ENCODING_PCM_16BIT);
+        final AudioTrack at = new AudioTrack(AudioManager.STREAM_MUSIC, 44100, AudioFormat.CHANNEL_IN_STEREO, AudioFormat.ENCODING_PCM_16BIT, minBufferSize, AudioTrack.MODE_STREAM);
+
+        try {
+//            FileInputStream fin = new FileInputStream(filepath + "/REFERENCE.wav");
+        	InputStream in = getResources().openRawResource(R.raw.a0);
+            DataInputStream dis = new DataInputStream(in);
+
+            final byte[] s = new byte[in.available()];
+            dis.readFully(s);
+            
+            at.play();
+            Timer timer = new Timer();
+            timer.schedule(new TimerTask() {
+				
+				@Override
+				public void run() {
+	                at.write(s, 0, s.length);
+					
+				}
+			}, 0, 250);
+            dis.close();
+            in.close();
+
+            // App 終了時に
+//            at.stop();
+//            at.release();
+        } catch (FileNotFoundException e) {
+            // TODO
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO
+            e.printStackTrace();
+        }     		
+	}
+
+	/**コンテキストを取得する*/
     private void getContext(){
     	AppliData.context = this;
     }
@@ -92,7 +141,7 @@ class SensorThread extends Thread implements SensorEventListener{
     	
     	try {
 			queue.put(velocity.current());
-			Log.d("comporive", velocity.current().toString());
+//			Log.d("comporive", velocity.current().toString());
 		} catch (InterruptedException e) {
 //			// TODO Auto-generated catch block
 //			e.printStackTrace();
